@@ -5,10 +5,8 @@ import { v4 as uuidv4 } from "uuid"
 import { WebhookUrlDisplay } from "./components/webhook-url-display"
 import { Inbox } from "./components/inbox"
 import { MessageViewer } from "./components/message-viewer"
+import { SettingsPanel } from "./components/settings-panel"
 import { type WebhookEvent } from "./actions/webhook"
-import { Button } from "@/components/ui/button"
-import { Settings } from "lucide-react"
-import Link from "next/link"
 import {
   ResizableHandle,
   ResizablePanel,
@@ -22,6 +20,7 @@ export default function Home() {
   const [selectedEvent, setSelectedEvent] = useState<WebhookEvent | null>(null)
   const [status, setStatus] = useState<"connecting" | "connected" | "reconnecting" | "disconnected">("connecting")
   const [unreadCount, setUnreadCount] = useState(0)
+  const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => {
     // Get or create UUID from localStorage
@@ -93,26 +92,23 @@ export default function Home() {
               onEventsChange={() => {
                 setSelectedEvent(null)
               }}
+              onOpenSettings={() => setShowSettings(!showSettings)}
+              showSettings={showSettings}
             />
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70}>
             <div className="p-4 border-b">
-              <div className="flex items-start gap-4">
-                <div className="flex-1">
-                  <WebhookUrlDisplay uuid={uuid} status={status} />
-                </div>
-                <Link href="/settings">
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
+              <WebhookUrlDisplay uuid={uuid} status={status} />
             </div>
-            <MessageViewer
-              event={selectedEvent}
-              onDelete={() => setSelectedEvent(null)}
-            />
+            {showSettings ? (
+              <SettingsPanel uuid={uuid} onClose={() => setShowSettings(false)} />
+            ) : (
+              <MessageViewer
+                event={selectedEvent}
+                onDelete={() => setSelectedEvent(null)}
+              />
+            )}
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

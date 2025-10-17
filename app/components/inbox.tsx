@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { getWebhookEvents, deleteAllWebhookEvents, deleteWebhookEvent, type WebhookEvent } from "@/app/actions/webhook"
 import { RealtimeEvents } from "@/lib/realtime"
-import { Trash2, Search, Webhook, CreditCard, Github, MessageSquare, ShoppingCart, Phone, Mail, Globe, Code } from "lucide-react"
+import { Trash2, Search, Webhook, CreditCard, Github, MessageSquare, ShoppingCart, Phone, Mail, Globe, Code, Settings } from "lucide-react"
 
 type InboxProps = {
   uuid: string
@@ -19,9 +19,11 @@ type InboxProps = {
   onStatusChange: (status: "connecting" | "connected" | "reconnecting" | "disconnected") => void
   onNewEvent?: () => void
   onEventsChange?: () => void
+  onOpenSettings?: () => void
+  showSettings?: boolean
 }
 
-export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, onNewEvent, onEventsChange }: InboxProps) {
+export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, onNewEvent, onEventsChange, onOpenSettings, showSettings }: InboxProps) {
   const [events, setEvents] = useState<WebhookEvent[]>([])
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -64,7 +66,7 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
     e.stopPropagation() // Prevent selecting the event when clicking delete
     await deleteWebhookEvent(uuid, eventId)
     setEvents((prev) => prev.filter((event) => event.id !== eventId))
-    
+
     // If deleting the selected event, clear selection
     if (selectedEventId === eventId) {
       onEventsChange?.()
@@ -204,11 +206,21 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
       <div className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">eHook by <Link href="https://inbound.new" target="_blank">inbound</Link></h2>
-          {events.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleDeleteAll}>
-              <Trash2 className="h-4 w-4" />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onOpenSettings}
+              className={showSettings ? "bg-accent" : ""}
+            >
+              <Settings className="h-4 w-4" />
             </Button>
-          )}
+            {events.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={handleDeleteAll}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="relative">
