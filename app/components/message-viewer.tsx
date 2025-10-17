@@ -6,8 +6,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { type WebhookEvent } from "@/app/actions/webhook"
 import { deleteWebhookEvent } from "@/app/actions/webhook"
-import { Trash2 } from "lucide-react"
+import { Trash2, Download, Copy, Terminal } from "lucide-react"
 import Editor from "@monaco-editor/react"
+import { toast } from "sonner"
 
 type MessageViewerProps = {
   event: WebhookEvent | null
@@ -52,6 +53,44 @@ export function MessageViewer({ event, onDelete }: MessageViewerProps) {
     onDelete()
   }
 
+  const handleExportJSON = () => {
+    const json = JSON.stringify(event, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `webhook-${event.id}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success("Exported webhook as JSON")
+  }
+
+  const handleCopyCurl = () => {
+    const headers = Object.entries(event.headers)
+      .map(([key, value]) => `-H "${key}: ${value}"`)
+      .join(' \\\n  ')
+    
+    let bodyArg = ''
+    if (event.body) {
+      const bodyStr = typeof event.body === 'object' 
+        ? JSON.stringify(event.body)
+        : String(event.body)
+      bodyArg = ` \\\n  -d '${bodyStr}'`
+    }
+
+    const curl = `curl -X ${event.method} '${event.url}' \\\n  ${headers}${bodyArg}`
+    
+    navigator.clipboard.writeText(curl)
+    toast.success("Copied as cURL command")
+  }
+
+  const getPayloadSize = () => {
+    const size = new Blob([JSON.stringify(event)]).size
+    if (size < 1024) return `${size} B`
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`
+  }
+
   return (
     <ScrollArea className="h-full">
       <div className="p-6 space-y-6">
@@ -64,10 +103,21 @@ export function MessageViewer({ event, onDelete }: MessageViewerProps) {
             <span className="text-sm text-muted-foreground">
               {formatTimestamp(event.timestamp)}
             </span>
+            <Badge variant="outline" className="text-xs">
+              {getPayloadSize()}
+            </Badge>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleCopyCurl} title="Copy as cURL">
+              <Terminal className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleExportJSON} title="Export as JSON">
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleDelete} title="Delete">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         {/* Full URL */}

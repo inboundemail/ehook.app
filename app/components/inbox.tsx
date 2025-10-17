@@ -11,6 +11,8 @@ import { Separator } from "@/components/ui/separator"
 import { getWebhookEvents, deleteAllWebhookEvents, deleteWebhookEvent, type WebhookEvent } from "@/app/actions/webhook"
 import { RealtimeEvents } from "@/lib/realtime"
 import { Trash2, Search, Webhook, CreditCard, Github, MessageSquare, ShoppingCart, Phone, Mail, Globe, Code, Settings } from "lucide-react"
+import { toast } from "sonner"
+import { formatDistanceToNow } from "date-fns"
 
 type InboxProps = {
   uuid: string
@@ -37,6 +39,13 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
         setEvents((prev) => [data, ...prev])
         // Notify parent about new event
         onNewEvent?.()
+        // Show toast notification if window is visible
+        if (!document.hidden && document.hasFocus()) {
+          toast.success(`${data.method} webhook received`, {
+            description: new Date(data.timestamp).toLocaleTimeString(),
+            duration: 3000,
+          })
+        }
       }
     },
   })
@@ -57,21 +66,47 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
   }, [uuid])
 
   const handleDeleteAll = async () => {
+    if (!confirm(`Are you sure you want to delete all ${events.length} webhooks? This cannot be undone.`)) {
+      return
+    }
     await deleteAllWebhookEvents(uuid)
     setEvents([])
     onEventsChange?.()
+    toast.success(`Deleted all ${events.length} webhooks`)
   }
 
   const handleDeleteOne = async (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent selecting the event when clicking delete
     await deleteWebhookEvent(uuid, eventId)
     setEvents((prev) => prev.filter((event) => event.id !== eventId))
-
+    toast.success("Webhook deleted")
+    
     // If deleting the selected event, clear selection
     if (selectedEventId === eventId) {
       onEventsChange?.()
     }
   }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // CMD/CTRL + K to focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        const searchInput = document.querySelector('input[placeholder="Search events..."]') as HTMLInputElement
+        searchInput?.focus()
+      }
+      
+      // CMD/CTRL + , to open settings
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault()
+        onOpenSettings?.()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [onOpenSettings])
 
   // Filter events based on search query
   const filteredEvents = useMemo(() => {
@@ -129,8 +164,11 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
   }
 
   const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp)
-    return date.toLocaleTimeString()
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true })
+    } catch {
+      return new Date(timestamp).toLocaleTimeString()
+    }
   }
 
   const getPreview = (event: WebhookEvent) => {
@@ -234,9 +272,25 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
           />
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          {filteredEvents.length} {filteredEvents.length === events.length ? "events" : `of ${events.length} events`}
-        </p>
+        <div className="flex items-center justify-between text-sm">
+          <p className="text-muted-foreground">
+            {filteredEvents.length} {filteredEvents.length === events.length ? "events" : `of ${events.length} events`}
+          </p>
+          {events.length > 0 && (
+            <div className="flex items-center gap-2">
+              {Object.entries(
+                events.reduce((acc, e) => {
+                  acc[e.method] = (acc[e.method] || 0) + 1
+                  return acc
+                }, {} as Record<string, number>)
+              ).map(([method, count]) => (
+                <Badge key={method} variant="outline" className="text-xs">
+                  {method}: {count}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <Separator />
       <ScrollArea className="flex-1">
