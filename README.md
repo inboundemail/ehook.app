@@ -1,8 +1,35 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## eHook - Webhook Inspector
+
+A real-time webhook inspection tool that allows you to view and debug webhook payloads with a beautiful UI.
+
+## Prerequisites
+
+Before you begin, you'll need to set up an Upstash Redis database:
+
+1. Go to [Upstash Console](https://console.upstash.com)
+2. Create a new Redis database
+3. Copy your database credentials
+
+## Environment Variables
+
+Create a `.env.local` file in the root directory and add your Upstash Redis credentials:
+
+```bash
+UPSTASH_REDIS_REST_URL=https://your-database.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token-here
+```
+
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+bun install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -16,7 +43,15 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
+
+- **Unique Webhook URLs**: Each user gets a unique webhook URL that persists across sessions
+- **Real-time Updates**: See webhook events appear instantly using Upstash Realtime
+- **All HTTP Methods**: Accepts GET, POST, PUT, DELETE, PATCH, OPTIONS, and HEAD requests
+- **Beautiful UI**: Built with shadcn/ui components and Tailwind CSS
+- **Syntax Highlighting**: JSON payloads are displayed with syntax highlighting
+- **History**: Last 50 webhook events are stored and can be reviewed
+- **Multi-tab Support**: All tabs with the same UUID receive real-time updates
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
