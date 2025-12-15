@@ -1,11 +1,17 @@
 {
   "name": "ehook.app",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "bun --cwd packages/web dev",
     "build": "bun --cwd packages/web build",
     "cli:build": "bun --cwd packages/cli build",
     "cli:dev": "bun --cwd packages/cli dev"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.7.1"
   }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarClock, Webhook } from "lucide-react"
+import { Webhook, Workflow } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -21,9 +21,9 @@ const menuItems = [
     icon: Webhook,
   },
   {
-    title: "Schedules",
-    href: "/schedules",
-    icon: CalendarClock,
+    title: "Workflows",
+    href: "/workflows",
+    icon: Workflow,
   },
 ]
 
